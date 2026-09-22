@@ -6,7 +6,7 @@ Three GNOME top bar indicators, sitting together just left of the system menu.
 |---|---|---|
 | Usage | Two progress lines — 5h window on top, 7d below. Click for exact percentages and reset times. | `api.anthropic.com/api/oauth/usage` |
 | RAM | Vertical bar + percentage. Click for used/total, available, cached, swap. | `/proc/meminfo` |
-| Sessions | `▶2 ❗1 ⏸1` — working / needs you / idle. Click for each session's name, state and folder. | `~/.claude/sessions/*.json` |
+| Sessions | `▶2 ❗1 ⏸1` — working / needs you / idle. Interactive and `--bg` sessions alike. Click for each session's name, state and folder. | `~/.claude/sessions/*.json` |
 
 ## Install
 
@@ -60,8 +60,16 @@ Claude Code. The token is passed to `curl` through a config file on stdin, so it
 in the process list. Nothing is written, logged, cached to disk, or sent anywhere else.
 
 The other two read `/proc/meminfo` and `~/.claude/sessions/*.json`, both local and read-only.
-A session file is ignored unless `/proc/<pid>/comm` is still `claude`, so dead sessions do not
-linger as ghosts.
+A session file is ignored unless `/proc/<pid>/cmdline` still names a Claude process, so dead
+sessions do not linger as ghosts. Checking `cmdline` rather than `comm` matters: a `claude --bg`
+session execs the version-named binary, so its `comm` reads e.g. `2.1.278`, and matching on
+`comm` silently hides every background session.
+
+The result matches `claude agents --json` exactly, without spawning the CLI on every poll.
+Two things are deliberately absent, as they are from that listing too: pre-warmed **spares**
+(`"spare": true`, hex names, permanently idle — not real work), and **in-process subagents**,
+which run inside their parent's process and have no PID or session file of their own. A busy
+subagent shows up as its parent session being busy.
 
 Polling: sessions 2s, RAM 3s, usage 5 min (plus at most once a minute when you open its menu —
 the usage endpoint returns HTTP 429 if you ask more often than that).

@@ -223,11 +223,11 @@ class SessionsIndicator extends ClaudeIndicator {
             } catch (e) {
                 continue;
             }
-            if (typeof session.pid !== 'number')
+            if (typeof session.pid !== 'number' || session.spare === true)
                 continue;
 
-            const comm = readText('/proc/' + session.pid + '/comm');
-            if (comm === null || comm.trim() !== 'claude')
+            const cmdline = readText('/proc/' + session.pid + '/cmdline');
+            if (cmdline === null || !cmdline.includes('claude'))
                 continue;
 
             sessions.push(session);
@@ -259,8 +259,9 @@ class SessionsIndicator extends ClaudeIndicator {
 
             const name = session.name || GLib.path_get_basename(session.cwd || 'session');
             const mark = state.bucket === 'busy' ? '▶' : state.bucket === 'waiting' ? '❗' : '⏸';
+            const origin = session.kind === 'bg' ? 'background · ' : '';
             this._textRow(mark + '  ' + name + ' — ' + state.text);
-            this._textRow('      ' + (session.cwd || ''), true);
+            this._textRow('      ' + origin + (session.cwd || ''), true);
         }
         if (sessions.length === 0)
             this._textRow('No Claude sessions running');
