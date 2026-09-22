@@ -1,0 +1,7 @@
+{
+  "uuid": "claude-taskbar@maksumus.local",
+  "name": "Claude Taskbar",
+  "description": "Top bar indicators for active Claude Code sessions, RAM usage and Claude Code limits.",
+  "shell-version": ["45", "46", "47", "48"],
+  "version": 1
+}
